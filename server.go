@@ -19,13 +19,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/PuerkitoBio/throttled"
-	"github.com/PuerkitoBio/throttled/store"
-	"github.com/codegangsta/cli"
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/binding"
 	"github.com/martini-contrib/cors"
 	"github.com/tgulacsi/go/temp"
+	"github.com/throttled/throttled"
+	"github.com/throttled/throttled/store"
+	"github.com/urfave/cli"
 )
 
 // UploadForm is a form structure to use when an image is POSTed to the server
@@ -56,8 +56,8 @@ func main() {
 	}
 
 	app := cli.NewApp()
-	app.Name = "pixlserv"
-	app.Usage = "transform and serve images"
+	app.Name = "imgserv"
+	app.Usage = "upload and save images"
 	app.Version = "1.0"
 	app.Commands = []cli.Command{
 		{
@@ -65,7 +65,7 @@ func main() {
 			Usage: "Runs the server (run [config-file])",
 			Action: func(c *cli.Context) {
 				// Set up logging for server
-				log.SetPrefix("[pixlserv] ")
+				log.SetPrefix("[imgserv] ")
 
 				if len(c.Args()) < 1 {
 					log.Println("You need to provide a path to a config file")
@@ -114,7 +114,7 @@ func main() {
 				m.Get("/", func() string {
 					return "It works!"
 				})
-				m.Get("/((?P<apikey>[A-Z0-9]+)/)?image/:parameters/**", transformationHandler)
+				// m.Get("/((?P<apikey>[A-Z0-9]+)/)?image/:parameters/**", transformationHandler)
 				m.Post("/((?P<apikey>[A-Z0-9]+)/)?upload", binding.MultipartForm(UploadForm{}), uploadHandler)
 				go m.Run()
 
@@ -233,73 +233,73 @@ func main() {
 	app.Run(os.Args)
 }
 
-func transformationHandler(params martini.Params) (int, string) {
-	if !hasPermission(params["apikey"], GetPermission) {
-		return http.StatusUnauthorized, ""
-	}
+// func transformationHandler(params martini.Params) (int, string) {
+// 	if !hasPermission(params["apikey"], GetPermission) {
+// 		return http.StatusUnauthorized, ""
+// 	}
 
-	var transformation Transformation
-	transformationName := parseTransformationName(params["parameters"])
-	if transformationName != "" {
-		var ok bool
-		transformation, ok = Config.transformations[transformationName]
-		if !ok {
-			return http.StatusBadRequest, "Unknown transformation: " + transformationName
-		}
-	} else if Config.allowCustomTransformations {
-		parameters, err := parseParameters(params["parameters"])
-		if err != nil {
-			return http.StatusBadRequest, err.Error()
-		}
-		transformation = Transformation{&parameters, nil, make([]*Text, 0)}
-	} else {
-		return http.StatusBadRequest, "Custom transformations not allowed"
-	}
-	baseImagePath, scale := parseBasePathAndScale(params["_1"])
-	if Config.allowCustomScale {
-		parameters := transformation.params.WithScale(scale)
-		transformation.params = &parameters
-	}
+// 	var transformation Transformation
+// 	transformationName := parseTransformationName(params["parameters"])
+// 	if transformationName != "" {
+// 		var ok bool
+// 		transformation, ok = Config.transformations[transformationName]
+// 		if !ok {
+// 			return http.StatusBadRequest, "Unknown transformation: " + transformationName
+// 		}
+// 	} else if Config.allowCustomTransformations {
+// 		parameters, err := parseParameters(params["parameters"])
+// 		if err != nil {
+// 			return http.StatusBadRequest, err.Error()
+// 		}
+// 		transformation = Transformation{&parameters, nil, make([]*Text, 0)}
+// 	} else {
+// 		return http.StatusBadRequest, "Custom transformations not allowed"
+// 	}
+// 	baseImagePath, scale := parseBasePathAndScale(params["_1"])
+// 	if Config.allowCustomScale {
+// 		parameters := transformation.params.WithScale(scale)
+// 		transformation.params = &parameters
+// 	}
 
-	// Check if the image with the given parameters already exists
-	// and return it
-	fullImagePath, _ := transformation.createFilePath(baseImagePath)
-	img, format, err := loadFromCache(fullImagePath)
-	if err == nil {
-		var buffer bytes.Buffer
-		writeImage(img, format, &buffer)
+// 	// Check if the image with the given parameters already exists
+// 	// and return it
+// 	fullImagePath, _ := transformation.createFilePath(baseImagePath)
+// 	img, format, err := loadFromCache(fullImagePath)
+// 	if err == nil {
+// 		var buffer bytes.Buffer
+// 		writeImage(img, format, &buffer)
 
-		return http.StatusOK, buffer.String()
-	}
+// 		return http.StatusOK, buffer.String()
+// 	}
 
-	// Load the original image and process it
-	if !imageExists(baseImagePath) {
-		return http.StatusNotFound, "Image not found: " + baseImagePath
-	}
+// 	// Load the original image and process it
+// 	if !imageExists(baseImagePath) {
+// 		return http.StatusNotFound, "Image not found: " + baseImagePath
+// 	}
 
-	img, format, err = loadImage(baseImagePath)
-	if err != nil {
-		return http.StatusInternalServerError, err.Error()
-	}
+// 	img, format, err = loadImage(baseImagePath)
+// 	if err != nil {
+// 		return http.StatusInternalServerError, err.Error()
+// 	}
 
-	imgNew := transformCropAndResize(img, &transformation)
+// 	imgNew := transformCropAndResize(img, &transformation)
 
-	var buffer bytes.Buffer
-	err = writeImage(imgNew, format, &buffer)
-	if err != nil {
-		log.Println("Writing an image to the response failed:", err)
-	}
+// 	var buffer bytes.Buffer
+// 	err = writeImage(imgNew, format, &buffer)
+// 	if err != nil {
+// 		log.Println("Writing an image to the response failed:", err)
+// 	}
 
-	// Cache the image asynchronously to speed up the response
-	go func() {
-		err = addToCache(fullImagePath, imgNew, format)
-		if err != nil {
-			log.Println("Saving an image to cache failed:", err)
-		}
-	}()
+// 	// Cache the image asynchronously to speed up the response
+// 	go func() {
+// 		err = addToCache(fullImagePath, imgNew, format)
+// 		if err != nil {
+// 			log.Println("Saving an image to cache failed:", err)
+// 		}
+// 	}()
 
-	return http.StatusOK, buffer.String()
-}
+// 	return http.StatusOK, buffer.String()
+// }
 
 // UploadResponse is a struct to represent a JSON response for the upload handler
 type UploadResponse struct {
@@ -366,16 +366,16 @@ func uploadHandler(params martini.Params, uf UploadForm) (int, string) {
 		return http.StatusBadRequest, uploadError(err.Error())
 	}
 
-	c, _, err := image.DecodeConfig(reader)
-	if err != nil {
-		return http.StatusBadRequest, uploadError(err.Error())
-	}
-	reader.Seek(0, 0)
+	// c, _, err := image.DecodeConfig(reader)
+	// if err != nil {
+	// 	return http.StatusBadRequest, uploadError(err.Error())
+	// }
+	// reader.Seek(0, 0)
 
-	pixels := c.Width * c.Height
-	if pixels > Config.uploadMaxPixels {
-		return http.StatusBadRequest, uploadError(fmt.Sprintf("too many pixels: %d, allowed: %d", pixels, Config.uploadMaxPixels))
-	}
+	// pixels := c.Width * c.Height
+	// if pixels > Config.uploadMaxPixels {
+	// 	return http.StatusBadRequest, uploadError(fmt.Sprintf("too many pixels: %d, allowed: %d", pixels, Config.uploadMaxPixels))
+	// }
 
 	limit := io.LimitReader(reader, int64(Config.uploadMaxFileSize+1))
 	data, err := ioutil.ReadAll(limit)
@@ -400,15 +400,15 @@ func uploadHandler(params martini.Params, uf UploadForm) (int, string) {
 	log.Printf("Uploading %s", baseImagePath)
 
 	// Eager transformations
-	eagerlyTransform := func() {
-		if len(Config.eagerTransformations) > 0 {
-			for _, transformation := range Config.eagerTransformations {
-				imgNew := transformCropAndResize(img, &transformation)
-				fullImagePath, _ := transformation.createFilePath(baseImagePath)
-				addToCache(fullImagePath, imgNew, format)
-			}
-		}
-	}
+	// eagerlyTransform := func() {
+	// 	if len(Config.eagerTransformations) > 0 {
+	// 		for _, transformation := range Config.eagerTransformations {
+	// 			imgNew := transformCropAndResize(img, &transformation)
+	// 			fullImagePath, _ := transformation.createFilePath(baseImagePath)
+	// 			addToCache(fullImagePath, imgNew, format)
+	// 		}
+	// 	}
+	// }
 
 	if Config.asyncUploads {
 		go func() {
@@ -417,14 +417,14 @@ func uploadHandler(params martini.Params, uf UploadForm) (int, string) {
 				log.Println("Error saving image:", err)
 				return
 			}
-			go eagerlyTransform()
+			// go eagerlyTransform()
 		}()
 	} else {
-		_, err := saveImage(img, format, baseImagePath)
-		if err != nil {
-			return http.StatusInternalServerError, uploadError("error saving image: " + err.Error())
-		}
-		go eagerlyTransform()
+		// _, err := saveImage(img, format, baseImagePath)
+		// if err != nil {
+		// 	return http.StatusInternalServerError, uploadError("error saving image: " + err.Error())
+		// }
+		// go eagerlyTransform()
 	}
 
 	return http.StatusOK, uploadSuccess(baseImagePath)

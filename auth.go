@@ -9,7 +9,7 @@ import (
 	"sort"
 
 	"github.com/garyburd/redigo/redis"
-	"github.com/twinj/uuid"
+	"github.com/google/uuid"
 )
 
 const (
@@ -25,7 +25,7 @@ var (
 
 func init() {
 	// Change the UUID format to remove surrounding braces and dashes
-	uuid.SwitchFormat(uuid.Clean)
+	// uuid.SwitchFormat(uuid.Clean)
 }
 
 func authInit() error {
@@ -65,8 +65,8 @@ func hasPermission(key, permission string) bool {
 }
 
 func generateKey() (string, string, error) {
-	key := uuid.NewV4().String()
-	secretKey := uuid.NewV4().String()
+	key := uuid.NewString()
+	secretKey := uuid.NewString()
 	_, err := Conn.Do("SADD", "api-keys", key)
 	if err != nil {
 		return "", "", err
@@ -85,7 +85,7 @@ func generateSecret(key string) (string, error) {
 		return "", err
 	}
 
-	secretKey := uuid.NewV4().String()
+	secretKey := uuid.NewString()
 	_, err = Conn.Do("HSET", "key:"+key, "secret", secretKey)
 	if err != nil {
 		return "", err

@@ -16,8 +16,8 @@ import (
 
 	"crypto/sha1"
 
-	"code.google.com/p/freetype-go/freetype"
-	"code.google.com/p/freetype-go/freetype/truetype"
+	"github.com/golang/freetype"
+	"github.com/golang/freetype/truetype"
 	"github.com/nfnt/resize"
 )
 
