@@ -1,14 +1,14 @@
 package main
 
 import (
-	"fmt"
+	// "fmt"
 	"io/ioutil"
-	"os"
+	// "os"
 	"regexp"
 
-	"github.com/golang/freetype"
+	// "github.com/golang/freetype"
 
-	"github.com/lucasb-eyer/go-colorful"
+	// "github.com/lucasb-eyer/go-colorful"
 	"gopkg.in/yaml.v2"
 )
 
@@ -46,12 +46,12 @@ type Configuration struct {
 	allowCustomTransformations, allowCustomScale, asyncUploads, authorisedGet, authorisedUpload bool
 	localPath, cacheStrategy                                                                    string
 	corsAllowOrigins                                                                            []string
-	transformations                                                                             map[string]Transformation
-	eagerTransformations                                                                        []Transformation
+	// 	transformations                                                                             map[string]Transformation
+	// 	eagerTransformations                                                                        []Transformation
 }
 
 func configInit(configFilePath string) error {
-	Config = Configuration{defaultThrottlingRate, defaultCacheLimit, defaultJpegQuality, defaultUploadMaxFileSize, defaultUploadMaxPixels, defaultAllowCustomTransformations, defaultAllowCustomScale, defaultAsyncUploads, defaultAuthorisedGet, defaultAuthorisedUpload, defaultLocalPath, defaultCacheStrategy, nil, make(map[string]Transformation), make([]Transformation, 0)}
+	Config = Configuration{defaultThrottlingRate, defaultCacheLimit, defaultJpegQuality, defaultUploadMaxFileSize, defaultUploadMaxPixels, defaultAllowCustomTransformations, defaultAllowCustomScale, defaultAsyncUploads, defaultAuthorisedGet, defaultAuthorisedUpload, defaultLocalPath, defaultCacheStrategy, nil}
 
 	if configFilePath == "" {
 		return nil
@@ -145,132 +145,132 @@ func configInit(configFilePath string) error {
 		Config.corsAllowOrigins = allowOrigins
 	}
 
-	transformations, ok := m["transformations"].([]interface{})
-	if !ok {
-		return nil
-	}
+	// transformations, ok := m["transformations"].([]interface{})
+	// if !ok {
+	// 	return nil
+	// }
 
-	for _, transformationMap := range transformations {
-		transformation, ok := transformationMap.(map[interface{}]interface{})
-		if !ok {
-			continue
-		}
+	// for _, transformationMap := range transformations {
+	// 	transformation, ok := transformationMap.(map[interface{}]interface{})
+	// 	if !ok {
+	// 		continue
+	// 	}
 
-		parametersStr, ok := transformation["parameters"].(string)
-		if !ok {
-			continue
-		}
+	// 	parametersStr, ok := transformation["parameters"].(string)
+	// 	if !ok {
+	// 		continue
+	// 	}
 
-		params, err := parseParameters(parametersStr)
-		if err != nil {
-			return fmt.Errorf("invalid transformation parameters: %s (%s)", parametersStr, err)
-		}
+	// 	params, err := parseParameters(parametersStr)
+	// 	if err != nil {
+	// 		return fmt.Errorf("invalid transformation parameters: %s (%s)", parametersStr, err)
+	// 	}
 
-		name, ok := transformation["name"].(string)
-		if !ok {
-			continue
-		}
-		if !isValidTransformationName(name) {
-			return fmt.Errorf("invalid transformation name: %s", name)
-		}
+	// 	name, ok := transformation["name"].(string)
+	// 	if !ok {
+	// 		continue
+	// 	}
+	// 	if !isValidTransformationName(name) {
+	// 		return fmt.Errorf("invalid transformation name: %s", name)
+	// 	}
 
-		t := Transformation{&params, nil, make([]*Text, 0)}
+	// 	t := Transformation{&params, nil, make([]*Text, 0)}
 
-		watermarkMap, ok := transformation["watermark"].(map[interface{}]interface{})
-		if ok {
-			imagePath, ok := watermarkMap["source"].(string)
-			if !ok {
-				return fmt.Errorf("a watermark needs to have a source specified")
-			}
+	// 	watermarkMap, ok := transformation["watermark"].(map[interface{}]interface{})
+	// 	if ok {
+	// 		imagePath, ok := watermarkMap["source"].(string)
+	// 		if !ok {
+	// 			return fmt.Errorf("a watermark needs to have a source specified")
+	// 		}
 
-			gravity, ok := watermarkMap["gravity"].(string)
-			if !ok || !isValidGravity(gravity) {
-				return fmt.Errorf("missing or invalid gravity: %s", gravity)
-			}
+	// 		gravity, ok := watermarkMap["gravity"].(string)
+	// 		if !ok || !isValidGravity(gravity) {
+	// 			return fmt.Errorf("missing or invalid gravity: %s", gravity)
+	// 		}
 
-			// x and y will default to 0 if not found in config
-			x, ok := watermarkMap["x-pos"].(int)
-			if x < 0 {
-				return fmt.Errorf("x-pos must be at least 0")
-			}
-			y, ok := watermarkMap["y-pos"].(int)
-			if y < 0 {
-				return fmt.Errorf("y-pos must be at least 0")
-			}
+	// 		// x and y will default to 0 if not found in config
+	// 		x, ok := watermarkMap["x-pos"].(int)
+	// 		if x < 0 {
+	// 			return fmt.Errorf("x-pos must be at least 0")
+	// 		}
+	// 		y, ok := watermarkMap["y-pos"].(int)
+	// 		if y < 0 {
+	// 			return fmt.Errorf("y-pos must be at least 0")
+	// 		}
 
-			t.watermark = &Watermark{imagePath, gravity, x, y}
-		}
+	// 		t.watermark = &Watermark{imagePath, gravity, x, y}
+	// 	}
 
-		texts, ok := transformation["text"].([]interface{})
-		if ok {
+	// 	texts, ok := transformation["text"].([]interface{})
+	// 	if ok {
 
-			for _, textMap := range texts {
-				text, ok := textMap.(map[interface{}]interface{})
-				if !ok {
-					continue
-				}
+	// 		for _, textMap := range texts {
+	// 			text, ok := textMap.(map[interface{}]interface{})
+	// 			if !ok {
+	// 				continue
+	// 			}
 
-				content, ok := text["content"].(string)
+	// 			content, ok := text["content"].(string)
 
-				gravity, ok := text["gravity"].(string)
-				if !ok || !isValidGravity(gravity) {
-					return fmt.Errorf("missing or invalid gravity: %s", gravity)
-				}
+	// 			gravity, ok := text["gravity"].(string)
+	// 			if !ok || !isValidGravity(gravity) {
+	// 				return fmt.Errorf("missing or invalid gravity: %s", gravity)
+	// 			}
 
-				// x and y will default to 0 if not found in config
-				x, ok := text["x-pos"].(int)
-				if x < 0 {
-					return fmt.Errorf("x-pos must be at least 0")
-				}
-				y, ok := text["y-pos"].(int)
-				if y < 0 {
-					return fmt.Errorf("y-pos must be at least 0")
-				}
+	// 			// x and y will default to 0 if not found in config
+	// 			x, ok := text["x-pos"].(int)
+	// 			if x < 0 {
+	// 				return fmt.Errorf("x-pos must be at least 0")
+	// 			}
+	// 			y, ok := text["y-pos"].(int)
+	// 			if y < 0 {
+	// 				return fmt.Errorf("y-pos must be at least 0")
+	// 			}
 
-				colorStr, ok := text["color"].(string)
-				if !ok {
-					return fmt.Errorf("text needs to have a color specified")
-				}
-				color, err := colorful.Hex(colorStr)
-				if err != nil {
-					return err
-				}
+	// 			colorStr, ok := text["color"].(string)
+	// 			if !ok {
+	// 				return fmt.Errorf("text needs to have a color specified")
+	// 			}
+	// 			color, err := colorful.Hex(colorStr)
+	// 			if err != nil {
+	// 				return err
+	// 			}
 
-				fontFilePath, ok := text["font"].(string)
-				if !ok {
-					fontFilePath = defaultFontPath
-				}
-				if _, err := os.Stat(fontFilePath); os.IsNotExist(err) {
-					return fmt.Errorf("font does not exist: %s", fontFilePath)
-				}
-				fontBytes, err := ioutil.ReadFile(fontFilePath)
-				if err != nil {
-					return fmt.Errorf("loading font failed: %s", err)
-				}
-				font, err := freetype.ParseFont(fontBytes)
-				if err != nil {
-					return fmt.Errorf("loading font failed: %s", err)
-				}
+	// 			fontFilePath, ok := text["font"].(string)
+	// 			if !ok {
+	// 				fontFilePath = defaultFontPath
+	// 			}
+	// 			if _, err := os.Stat(fontFilePath); os.IsNotExist(err) {
+	// 				return fmt.Errorf("font does not exist: %s", fontFilePath)
+	// 			}
+	// 			fontBytes, err := ioutil.ReadFile(fontFilePath)
+	// 			if err != nil {
+	// 				return fmt.Errorf("loading font failed: %s", err)
+	// 			}
+	// 			font, err := freetype.ParseFont(fontBytes)
+	// 			if err != nil {
+	// 				return fmt.Errorf("loading font failed: %s", err)
+	// 			}
 
-				size, ok := text["size"].(int)
-				if !ok {
-					return fmt.Errorf("%v is not a valid size %s", text["size"])
-				}
-				if size < 1 {
-					return fmt.Errorf("size needs to be at least 1")
-				}
+	// 			size, ok := text["size"].(int)
+	// 			if !ok {
+	// 				return fmt.Errorf("%v is not a valid size %s", text["size"])
+	// 			}
+	// 			if size < 1 {
+	// 				return fmt.Errorf("size needs to be at least 1")
+	// 			}
 
-				t.texts = append(t.texts, &Text{content, gravity, fontFilePath, x, y, size, font, color})
-			}
-		}
+	// 			t.texts = append(t.texts, &Text{content, gravity, fontFilePath, x, y, size, font, color})
+	// 		}
+	// 	}
 
-		Config.transformations[name] = t
+	// 	Config.transformations[name] = t
 
-		eager, ok := transformation["eager"].(bool)
-		if ok && eager {
-			Config.eagerTransformations = append(Config.eagerTransformations, t)
-		}
-	}
+	// 	eager, ok := transformation["eager"].(bool)
+	// 	if ok && eager {
+	// 		Config.eagerTransformations = append(Config.eagerTransformations, t)
+	// 	}
+	// }
 
 	return nil
 }
