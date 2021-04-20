@@ -22,7 +22,7 @@ upload-max-pixels: 8000000
 # Which operations need an API key with suitable permissions (none by default)
 authorisation:
   get: No
-  upload: NO
+  upload: No
 
 # Directory to store images if using local storage (local-images by default)
 local-path: images

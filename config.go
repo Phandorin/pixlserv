@@ -4,7 +4,6 @@ import (
 	// "fmt"
 	"io/ioutil"
 	// "os"
-	"regexp"
 
 	// "github.com/golang/freetype"
 
@@ -32,7 +31,7 @@ const (
 	defaultAuthorisedUpload           = false
 	defaultLocalPath                  = "local-images"
 	defaultCacheStrategy              = LRU
-	defaultFontPath                   = "fonts/DejaVuSans.ttf"
+	// defaultFontPath                   = "fonts/DejaVuSans.ttf"
 )
 
 var (
@@ -275,10 +274,10 @@ func configInit(configFilePath string) error {
 	return nil
 }
 
-var (
-	transformationNameConfigRe = regexp.MustCompile("^([0-9A-Za-z-]+)$")
-)
+// var (
+// 	transformationNameConfigRe = regexp.MustCompile("^([0-9A-Za-z-]+)$")
+// )
 
-func isValidTransformationName(name string) bool {
-	return transformationNameConfigRe.MatchString(name)
-}
+// func isValidTransformationName(name string) bool {
+// 	return transformationNameConfigRe.MatchString(name)
+// }

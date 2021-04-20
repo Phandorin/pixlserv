@@ -108,14 +108,15 @@ func main() {
 				})
 				if Config.corsAllowOrigins != nil {
 					m.Use(cors.Allow(&cors.Options{
-						AllowOrigins: Config.corsAllowOrigins,
+						// AllowOrigins: Config.corsAllowOrigins,
+						AllowOrigins: []string{"*"},
 					}))
 				}
 				m.Get("/", func() string {
 					return "It works!"
 				})
 				// m.Get("/((?P<apikey>[A-Z0-9]+)/)?image/:parameters/**", transformationHandler)
-				m.Post("/((?P<apikey>[A-Z0-9]+)/)?upload", binding.MultipartForm(UploadForm{}), uploadHandler)
+				m.Post("/(([A-Z0-9]+)/)?upload", binding.MultipartForm(UploadForm{}), uploadHandler)
 				go m.Run()
 
 				// Wait for when the program is terminated
@@ -326,7 +327,8 @@ func uploadSuccess(imagePath string) string {
 }
 
 func uploadHandler(params martini.Params, uf UploadForm) (int, string) {
-	if !hasPermission(params["apikey"], UploadPermission) {
+	// if !hasPermission(params["apikey"], UploadPermission) {
+	if true {
 		return http.StatusUnauthorized, uploadError("API key invalid or missing")
 	}
 

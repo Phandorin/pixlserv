@@ -14,7 +14,7 @@ import (
 
 const (
 	// GetPermission = permission to get (and transform) images
-	GetPermission = "get"
+	// GetPermission = "get"
 	// UploadPermission = permission to upload images
 	UploadPermission = "upload"
 )
@@ -38,8 +38,8 @@ func authInit() error {
 
 	// Set up permissions for when there's no API key
 	permissionsByKey[""] = make(map[string]bool)
-	permissionsByKey[""][GetPermission] = !Config.authorisedGet
-	permissionsByKey[""][UploadPermission] = !Config.authorisedUpload
+	// permissionsByKey[""][GetPermission] = !Config.authorisedGet
+	permissionsByKey[""][UploadPermission] = Config.authorisedUpload
 
 	// Set up permissions for API keys
 	for _, key := range keys {
@@ -119,8 +119,8 @@ func modifyKey(key, op, permission string) error {
 	if op != "add" && op != "remove" {
 		return errors.New("modifier needs to be 'add' or 'remove'")
 	}
-	if permission != GetPermission && permission != UploadPermission {
-		return fmt.Errorf("modifier needs to end with a valid permission: %s or %s", GetPermission, UploadPermission)
+	if permission != UploadPermission {
+		return fmt.Errorf("modifier needs to end with a valid permission: %s", UploadPermission)
 	}
 	if op == "add" {
 		_, err = Conn.Do("SADD", "key:"+key+":permissions", permission)
